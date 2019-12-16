@@ -1,0 +1,31 @@
+apiVersion: extensions/v1beta1
+kind: DaemonSet
+metadata:
+  namespace: kube-system
+  name: eks-nvme-ssd-provisioner
+  labels:
+    app: eks-nvme-ssd-provisioner
+spec:
+  template:
+    metadata:
+      labels:
+        name: eks-nvme-ssd-provisioner
+    spec:
+      automountServiceAccountToken: false
+      nodeSelector:
+        aws.amazon.com/eks-local-ssd: "true"
+      priorityClassName: system-node-critical
+      containers:
+      - name: eks-nvme-ssd-provisioner
+        image: eu.gcr.io/brunsgaard-public/eks-nvme-ssd-provisioner:v1.0.0
+        imagePullPolicy: Always
+        securityContext:
+          privileged: true
+        volumeMounts:
+          - mountPath: /pv-disks
+            name: pv-disks
+            mountPropagation: "Bidirectional"
+      volumes:
+      - name: pv-disks
+        hostPath:
+          path: /pv-disks
