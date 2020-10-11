@@ -6,6 +6,9 @@ metadata:
   labels:
     app: eks-nvme-ssd-provisioner
 spec:
+  selector:
+    matchLabels:
+      name: eks-nvme-ssd-provisioner
   template:
     metadata:
       labels:
