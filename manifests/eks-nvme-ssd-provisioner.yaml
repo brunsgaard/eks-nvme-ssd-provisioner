@@ -1,4 +1,4 @@
-apiVersion: extensions/v1beta1
+apiVersion: apps/v1
 kind: DaemonSet
 metadata:
   namespace: kube-system
@@ -6,6 +6,9 @@ metadata:
   labels:
     app: eks-nvme-ssd-provisioner
 spec:
+  selector:
+    matchLabels:
+      name: eks-nvme-ssd-provisioner
   template:
     metadata:
       labels:
@@ -25,7 +28,13 @@ spec:
           - mountPath: /pv-disks
             name: pv-disks
             mountPropagation: "Bidirectional"
+          - mountPath: /nvme
+            name: nvme
+            mountPropagation: "Bidirectional"
       volumes:
       - name: pv-disks
         hostPath:
           path: /pv-disks
+      - name: nvme
+        hostPath:
+          path: /nvme

@@ -49,6 +49,7 @@ esac
 UUID=$(blkid -s UUID -o value $DEVICE)
 mkdir -p /pv-disks/$UUID
 mount -o defaults,noatime,discard,nobarrier --uuid $UUID /pv-disks/$UUID
+ln -s /pv-disks/$UUID /nvme/disk
 echo "Device $DEVICE has been mounted to /pv-disks/$UUID"
 echo "NVMe SSD provisioning is done and I will go to sleep now"
 
