@@ -1,3 +1,8 @@
+_2020/12/02_   
+WARN: Please build and host your own image as the GCR costs are becomming
+significant for me and I need to find another solution for hosting the image
+soon. Today I have replaced the image tag `v1.0.0` with an alpine version.
+
 # eks-nvme-ssd-provisioner
 
 The eks-nvme-ssd-provisioner will format and mount NVMe SSD disks on EKS
