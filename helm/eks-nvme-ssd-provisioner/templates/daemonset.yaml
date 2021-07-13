@@ -1,0 +1,49 @@
+apiVersion: apps/v1
+kind: DaemonSet
+metadata:
+  name: {{ include "eks-nvme-ssd-provisioner.fullname" . }}
+  labels:
+    {{- include "eks-nvme-ssd-provisioner.labels" . | nindent 4 }}
+spec:
+  selector:
+    matchLabels:
+      {{- include "eks-nvme-ssd-provisioner.selectorLabels" . | nindent 6 }}
+  template:
+    metadata:
+      labels:
+        {{- include "eks-nvme-ssd-provisioner.selectorLabels" . | nindent 8 }}
+    spec:
+      automountServiceAccountToken: {{ .Values.automountServiceAccountToken }}
+      {{- with .Values.nodeSelector }}
+      nodeSelector:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      {{- with .Values.tolerations }}
+      tolerations:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      priorityClassName: {{ .Values.priorityClassName }}
+      {{- with .Values.imagePullSecrets }}
+      imagePullSecrets:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      containers:
+      - name: {{ .Chart.Name }}
+        image: {{ .Values.image.repository }}:{{ .Values.image.tag | default .Chart.AppVersion }}
+        imagePullPolicy: {{ .Values.image.pullPolicy }}
+        securityContext:
+          {{- toYaml .Values.securityContext | nindent 10 }}
+        volumeMounts:
+          - mountPath: /pv-disks
+            name: pv-disks
+            mountPropagation: "Bidirectional"
+          - mountPath: /nvme
+            name: nvme
+            mountPropagation: "Bidirectional"
+      volumes:
+      - name: pv-disks
+        hostPath:
+          path: /pv-disks
+      - name: nvme
+        hostPath:
+          path: /nvme

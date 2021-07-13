@@ -32,6 +32,12 @@ plays well with the eks-nvme-ssd-provisioner
 kubectl apply -f manifests/storage-local-static-provisioner.yaml
 ```
 
+## Helm
+
+```
+helm upgrade --install --namespace=kube-system eks-nvme-ssd-provisioner ./helm/eks-nvme-ssd-provisioner
+```
+
 ## Relation to sig-storage-local-static-provisioner
  - eks-nvme-ssd-provisioner creates disks from block storage
  - sig-storage-local-static-provisioner creates PersistentVolumens from disks 
