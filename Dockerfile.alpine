@@ -1,6 +1,13 @@
-FROM alpine:3.8
+FROM alpine:3.14
 
-RUN apk add --update-cache mdadm nvme-cli bash e2fsprogs blkid util-linux
+RUN \
+  apk update update && apk add --no-cache \
+    bash \
+    blkid \
+    e2fsprogs \
+    mdadm \
+    nvme-cli \
+    util-linux
 COPY eks-nvme-ssd-provisioner.sh /usr/local/bin/
 
 ENTRYPOINT ["eks-nvme-ssd-provisioner.sh"]
