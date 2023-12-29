@@ -38,10 +38,13 @@ then
   if mount | grep "$DEVICE" > /dev/null; then
     echo "device $DEVICE appears to be mounted already"
   else
-    mount -o defaults,noatime,discard,nobarrier --uuid "$UUID" "/pv-disks/disks/$UUID"
+    mount -o defaults,noatime,discard,nobarrier --uuid "$UUID" "/pv-disks/$UUID"
   fi
-  ln -s "/pv-disks/disks/$UUID" /nvme/disk || true
-  echo "Device $DEVICE has been mounted to /pv-disks/disks/$UUID"
+  ln -s "/pv-disks/$UUID" /nvme/disk || true
+  echo "Device $DEVICE has been mounted to /pv-disks/$UUID"
+  echo "Making 8 folders and binding them to the disk"
+  for i in {1..8}; do mkdir -p "/pv-disks/$UUID/disk_$i"; mkdir -p "/pv-disks/disks/disk_$i"; mount -o bind "/pv-disks/$UUID/disk_$i" "/pv-disks/disks/disk_$i"; done
+  echo "8 folders provisioning is done and I will go to sleep now"
   while sleep 3600; do :; done
 fi
 
