@@ -4,7 +4,7 @@ set -o errexit
 set -o nounset
 set -o pipefail
 
-mapfile -t SSD_NVME_DEVICE_LIST < <(nvme list | grep "Amazon EC2 NVMe Instance Storage" | cut -d " " -f 1 || true)
+mapfile -t SSD_NVME_DEVICE_LIST < <(nvme list | grep "HUSMR" | cut -d " " -f 1 || true)
 SSD_NVME_DEVICE_COUNT=${#SSD_NVME_DEVICE_LIST[@]}
 RAID_DEVICE=${RAID_DEVICE:-/dev/md0}
 RAID_CHUNK_SIZE=${RAID_CHUNK_SIZE:-512}  # Kilo Bytes
@@ -23,7 +23,7 @@ then
     exit 1
     ;;
   "1")
-    echo "no need to assable a raid"
+    echo "no need to assemble a raid"
     DEVICE="${SSD_NVME_DEVICE_LIST[0]}"
     ;;
   *)
