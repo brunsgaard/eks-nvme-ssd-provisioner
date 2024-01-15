@@ -4,7 +4,7 @@ set -o errexit
 set -o nounset
 set -o pipefail
 
-mapfile -t SSD_NVME_DEVICE_LIST < <(nvme list | grep "HUSMR" | cut -d " " -f 1 || true)
+mapfile -t SSD_NVME_DEVICE_LIST < <(nvme list | grep -P "HUSMR|INTEL" | cut -d " " -f 1 || true)
 SSD_NVME_DEVICE_COUNT=${#SSD_NVME_DEVICE_LIST[@]}
 RAID_DEVICE=${RAID_DEVICE:-/dev/md0}
 RAID_CHUNK_SIZE=${RAID_CHUNK_SIZE:-512}  # Kilo Bytes
