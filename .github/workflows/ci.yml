@@ -45,7 +45,7 @@ jobs:
         id: meta
         uses: docker/metadata-action@v5
         with:
-          images: ${{steps.login-ecr.outputs.registry}}/${{ inputs.imageName }}
+          images: ${{steps.login-ecr.outputs.registry}}/eks-nvme-ssd-provisioner
           labels: |
             org.opencontainers.image.title=eks-nvme-ssd-provisioner
             org.opencontainers.image.description=EKS NVMe SSD Provisioner
