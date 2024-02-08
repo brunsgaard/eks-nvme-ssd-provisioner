@@ -38,20 +38,36 @@ jobs:
         id: login-ecr
         uses: aws-actions/amazon-ecr-login@v1
 
-      - name: Build eks-nvme-ssd-provisioner image
-        env:
-          DOCKER_IMAGE: ${{steps.login-ecr.outputs.registry}}/eks-nvme-ssd-provisioner
-          BUILD_VERSION: ${{github.event.inputs.version}}
-        run: |
-          IMG="${DOCKER_IMAGE}:${BUILD_VERSION}" make docker-build
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
 
-      - name: Push eks-nvme-ssd-provisioner image to ECR
-        if: ${{ github.ref == 'refs/heads/main' || github.event.inputs.build_deploy_container == 'true' }}
-        env:
-          DOCKER_IMAGE: ${{steps.login-ecr.outputs.registry}}/eks-nvme-ssd-provisioner
-          BUILD_VERSION: ${{steps.create-version.outputs.BUILD_VERSION}}
-        run: |
-          docker push ${DOCKER_IMAGE}:${BUILD_VERSION}
+      - name: Extract metadata (tags, labels) for Docker
+        id: meta
+        uses: docker/metadata-action@v5
+        with:
+          images: ${{steps.login-ecr.outputs.registry}}/${{ inputs.imageName }}
+          labels: |
+            org.opencontainers.image.title=eks-nvme-ssd-provisioner
+            org.opencontainers.image.description=EKS NVMe SSD Provisioner
+            org.opencontainers.image.vendor=Dash0 Inc.
+          tags: |
+            type=ref,event=tag
+          flavor: |
+            latest=false
+
+      - name: Build and push Docker image
+        uses: docker/build-push-action@v5
+        with:
+          push: ${{ github.event_name != 'pull_request' }}
+          tags: ${{ steps.meta.outputs.tags }}
+          labels: ${{ steps.meta.outputs.labels }}
+          platforms: linux/amd64
+          build-args: |
+            NAME=${{ github.repository }}-eks-nvme-ssd-provisioner
+            VERSION=${{ steps.meta.outputs.version }}
+            REVISION=${{ github.sha }}
+          cache-from: type=gha,scope=eks-nvme-ssd-provisioner
+          cache-to: type=gha,mode=max,scope=eks-nvme-ssd-provisioner
 
   build-helm-chart:
     needs: build-image
