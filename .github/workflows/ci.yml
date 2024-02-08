@@ -63,11 +63,9 @@ jobs:
           labels: ${{ steps.meta.outputs.labels }}
           platforms: linux/amd64
           build-args: |
-            NAME=${{ github.repository }}-eks-nvme-ssd-provisioner
+            NAME=${{ github.repository }}
             VERSION=${{ steps.meta.outputs.version }}
             REVISION=${{ github.sha }}
-          cache-from: type=gha,scope=eks-nvme-ssd-provisioner
-          cache-to: type=gha,mode=max,scope=eks-nvme-ssd-provisioner
 
   build-helm-chart:
     needs: build-image
