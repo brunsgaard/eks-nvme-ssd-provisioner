@@ -1,0 +1,98 @@
+name: CI
+
+on:
+  workflow_dispatch:
+    inputs:
+      build_deploy_container:
+        description: "If true then the container will be and deployed"
+        required: true
+        default: "false"
+        type: choice
+        options:
+          - "true"
+          - "false"
+      version:
+        description: The version used when tagging the image (i.e. 0.0.1)
+        required: true
+        type: string
+
+jobs:
+  build-image:
+    permissions: write-all
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Configure AWS credentials
+        uses: aws-actions/configure-aws-credentials@v1-node16
+        with:
+          aws-access-key-id: ${{secrets.DEPLOYMENT_WRITE_ECR_ACCESS_KEY}}
+          aws-secret-access-key: ${{secrets.DEPLOYMENT_WRITE_ECR_SECRET_ACCESS_KEY}}
+          aws-region: us-west-2
+          mask-aws-account-id: true
+
+      - name: Login to Amazon ECR
+        id: login-ecr
+        uses: aws-actions/amazon-ecr-login@v1
+
+      - name: Build eks-nvme-ssd-provisioner image
+        env:
+          DOCKER_IMAGE: ${{steps.login-ecr.outputs.registry}}/eks-nvme-ssd-provisioner
+          BUILD_VERSION: ${{github.event.inputs.version}}
+        run: |
+          IMG="${DOCKER_IMAGE}:${BUILD_VERSION}" make docker-build
+
+      - name: Push eks-nvme-ssd-provisioner image to ECR
+        if: ${{ github.ref == 'refs/heads/main' || github.event.inputs.build_deploy_container == 'true' }}
+        env:
+          DOCKER_IMAGE: ${{steps.login-ecr.outputs.registry}}/eks-nvme-ssd-provisioner
+          BUILD_VERSION: ${{steps.create-version.outputs.BUILD_VERSION}}
+        run: |
+          docker push ${DOCKER_IMAGE}:${BUILD_VERSION}
+
+  build-helm-chart:
+    needs: build-image
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          path: 'src'
+          fetch-depth: 0
+
+      - name: Checkout gh-pages
+        uses: actions/checkout@v3
+        with:
+          path: 'dest'
+          ref: 'gh-pages'
+          fetch-depth: 0
+
+      - name: Install Helm
+        uses: azure/setup-helm@v3
+
+      - name: Build Helm Chart
+        shell: bash
+        working-directory: src/eks-nvme-ssd-provisioner
+        run: |
+          make helm
+
+      - name: Package Helm Charts
+        shell: bash
+        run: |
+          cd ${{ github.workspace }}
+          helm package src/helm/eks-nvme-ssd-provisioner -u -d dest --version ${{github.event.inputs.version}} --app-version ${{github.event.inputs.version}}
+
+      - name: Push New Helm Chart to gh-pages
+        if: ${{ github.ref == 'refs/heads/main' || github.event.inputs.build_deploy_container == 'true' }}
+        shell: bash
+        working-directory: dest
+        run: |
+          helm repo index . --url https://raw.githubusercontent.com/dash0hq/eks-nvme-ssd-provisioner/gh-pages/
+          git config user.name "Helm Chart Updater"
+          git config user.email "actions@users.noreply.github.com"
+          git add $(git ls-files -o --exclude-standard)
+          git add index.yaml
+          git commit -m "Created eks-nvme-ssd-provisioner with version ${{github.event.inputs.version}}"
+          git push
