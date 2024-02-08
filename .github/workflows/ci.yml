@@ -64,7 +64,7 @@ jobs:
           platforms: linux/amd64
           build-args: |
             NAME=${{ github.repository }}
-            VERSION=${{ steps.meta.outputs.version }}
+            VERSION=${{ github.event.inputs.version }}
             REVISION=${{ github.sha }}
 
   build-helm-chart:
